@@ -1,1 +1,1 @@
-# CodedVO-Coded-Visual-Odometry
+# CodedVO: Coded-Visual-Odometry
