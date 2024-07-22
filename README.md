@@ -4,7 +4,7 @@ Official implementation of "CodedVO: Coded Visual Odometry" accepted in IEEE Rob
 
 [[Project page](http://prg.cs.umd.edu/CodedVO)], [[CodedVO arxiv](https://ieeexplore.ieee.org/document/DOI_NUMBER_HERE)]  
 
-![Example of coded aperture setup](assets/coded_setup.jpg)
+![Example of coded aperture setup](assets/framework.png)
 
 
 
