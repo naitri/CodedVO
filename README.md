@@ -73,6 +73,7 @@ Additionally, we provide UMD-CodedVO dataset which includes ground truth depth, 
 - [UMD-CodedVO Dataset](https://drive.google.com/drive/folders/12U8BH-AWUA4DgbOValO-_hNI_Z9RgMXr?usp=sharing)
 
 ### Dataset Structure
+```
 ├── README.md
 ├── datasets
 │   └── nyu_data
@@ -84,6 +85,8 @@ Additionally, we provide UMD-CodedVO dataset which includes ground truth depth, 
 │   └── ...
 ├── weights
 │   └── ...
+```
+
 ### Generate Coded Images
 To generate coded blur RGB images from your own data, you can use the script `coded-generator.py`. 
 
