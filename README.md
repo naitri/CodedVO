@@ -2,9 +2,13 @@
 
 Official implementation of **"CodedVO: Coded Visual Odometry"** accepted in IEEE Robotics and Automation Letters, 2024.
 
-[**Project page**](http://prg.cs.umd.edu/CodedVO) | [**CodedVO on IEEE Xplore**](https://ieeexplore.ieee.org/abstract/document/10564186)
+[**Project page**](http://prg.cs.umd.edu/CodedVO) | [**IEEE Xplore**](https://ieeexplore.ieee.org/abstract/document/10564186) | [**arXiv**](https://arxiv.org/pdf/2407.18240)
 
-![Example of coded aperture setup](assets/framework.png)
+![Example of coded aperture setup](assets/Banner.png)
+
+## Video
+
+[![CodedVO Video](https://img.youtube.com/vi/5MOlGOLvtS4/0.jpg)](https://www.youtube.com/watch?v=5MOlGOLvtS4)
 
 ## Citation
 
