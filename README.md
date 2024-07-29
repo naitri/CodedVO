@@ -15,7 +15,7 @@ Official implementation of **"CodedVO: Coded Visual Odometry"** accepted in IEEE
 If you use this code in your research, please cite:
 
 ```bibtex
-@ARTICLE{10564186,
+@ARTICLE{codedvo2024,
   author={Shah, Sachin and Rajyaguru, Naitri and Singh, Chahat Deep and Metzler, Christopher and Aloimonos, Yiannis},
   journal={IEEE Robotics and Automation Letters}, 
   title={CodedVO: Coded Visual Odometry}, 
