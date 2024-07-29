@@ -128,5 +128,5 @@ We use ORB-SLAM after disabling the loop closure. Predicted depth maps from the 
 We would like to thank authors of [Phasecam3D](https://github.com/YichengWu/PhaseCam3D) and [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2) for opensourcing codebase.
 
 ## Contributions
-If you have any questions/comments/bug reports, feel free to open a github issue or pull a request or e-mail to the authors [Naitri Rajyaguru](nrajyagu@umd.edu) or [Sachin Shah](shah2022@umd.edu)
+If you have any questions/comments/bug reports, feel free to open a github issue or pull a request or e-mail to the authors [Naitri Rajyaguru](mailto:nrajyagu@umd.edu) or [Sachin Shah](mailto:shah2022@umd.edu)
 
