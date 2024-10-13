@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, ConcatDataset
 import wandb
 
-from config import get_experiment, DatasetName, DatasetName_train_icl, DatasetName_train_blender, DatasetName_blender
+from config import get_experiment, DatasetName, DatasetName_train_icl, DatasetName_train_blender
 from data import ImageDepthDataset
 from unet import init_weights, count_parameters
 
@@ -34,9 +34,10 @@ CHECKPOINT_DIR = os.path.join(args.SAVEDIR, experiment_name)
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
 # Load datasets
-test_datasets = {name: ImageDepthDataset(os.path.join(DATASET_DIR, name.name), codedDir = "Codedphasecam-27Linear", cache=True, scale_factor=1000) for name in DatasetName}
-nyu_datasets_train = {name: ImageDepthDataset(os.path.join(DATASET_DIR, name.name),codedDir = "Codedphasecam-27Linear", cache=True, scale_factor=1000) for name in DatasetName_train_icl}
-blender_datasets_train = {name: ImageDepthDataset(os.path.join(DATASET_DIR, name.name), codedDir = "Codedphasecam-27Linear",cache=True, is_blender=True, scale_factor=5000) for name in DatasetName_train_blender}
+##NOTE: Scale factor must be changed depeding on the training and test data. Blender EXR scale factor remains 1.
+test_datasets = {name: ImageDepthDataset(DATASET_DIR, name.name, codedDir="Codedphasecam-27Linear", cache=True, scale_factor=1000) for name in DatasetName}
+nyu_datasets_train = {name: ImageDepthDataset(DATASET_DIR, name.name, codedDir="Codedphasecam-27Linear", cache=True, scale_factor=1000) for name in DatasetName_train_icl}
+blender_datasets_train = {name: ImageDepthDataset(DATASET_DIR, name.name, codedDir="Codedphasecam-27Linear", cache=True, is_blender=True, scale_factor=1) for name in DatasetName_train_blender}
 
 # Combine training datasets
 train_datasets = [nyu_datasets_train[name] for name in EXPERIMENT.train if name in nyu_datasets_train] + \
