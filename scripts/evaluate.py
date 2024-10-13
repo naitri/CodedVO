@@ -23,6 +23,7 @@ parser.add_argument("--CONFIG", "-c", type=str, required=True, help="Path to the
 parser.add_argument("--DATASET", "-d", type=str, default="datasets", required=False, help="Path to the dataset directory.")
 parser.add_argument("--CHECKPOINT", "-s", type=str, required=True, help="Path to the model checkpoint.")
 parser.add_argument("--OUTPUT", "-o", type=str, required=True, help="Path to the output directory.")
+parser.add_argument("--is_blender", action="store_true", help="Use Blender's EXR depth format.")
 args = parser.parse_args(sys.argv[1:])
 
 # Load experiment configuration
@@ -30,40 +31,69 @@ DATASET_DIR = args.DATASET
 EXPERIMENT = get_experiment(args.CONFIG)
 
 # Load datasets
-blender_datasets = {name: ImageDepthDataset(os.path.join(DATASET_DIR, name.name), codedDir = "Codedphasecam-27Linear",cache=True, is_blender=True, scale_factor=5000) for name in DatasetName_blender}
+## NOTE: If evaluating on other datasets, do not use is_blender flag, and use scale factor accordingly.
+blender_datasets = {
+    name.name: ImageDepthDataset(
+        base=DATASET_DIR,
+        path=name.name, 
+        codedDir=EXPERIMENT.coded,
+        cache=True,
+        is_blender=args.is_blender,
+        scale_factor=5000
+    )
+    for name in DatasetName_blender
+}
+
+# Create DataLoader for the test datasets
 test_loaders = {name: DataLoader(dataset, batch_size=1, shuffle=False) for name, dataset in blender_datasets.items()}
 
-# Initialize model
+# Initialize the model
 model = EXPERIMENT.model().to(device).eval()
 model.load_state_dict(torch.load(args.CHECKPOINT, map_location=device))
 
+# Loss function
 L1 = nn.L1Loss()
-print(repr(EXPERIMENT))
 
 def to_numpy(img: torch.Tensor):
+    """
+    Convert PyTorch tensor to NumPy array.
+    """
     return np.clip(img.detach().cpu().numpy(), 0, None)
 
 def sigma_metric(estimated_depth, ground_truth_depth, threshold):
+    """
+    Compute the sigma accuracy metrics (as per standard depth estimation).
+    """
     ratio = torch.max(estimated_depth / ground_truth_depth, ground_truth_depth / estimated_depth)
     return torch.mean((ratio < threshold).float())
 
-def evaluate(dataloader: DataLoader, output_dir):
-    model.eval()
-    with torch.no_grad():
-        metrics = {
-            "metric_depth_error": 0,
-            "metric_depth_error_under3": 0,
-            "abs_rel": 0,
-            "sq_rel": 0,
-            "rmse": 0,
-            "rmse_log": 0,
-            "sigma_1_25": 0,
-            "sigma_1_25_2": 0,
-            "sigma_1_25_3": 0,
-            "sample_count": 0,
-            "total_inference_time": 0
-        }
+def evaluate(dataloader: DataLoader, output_dir: str):
+    """
+    Evaluate the model and compute various depth metrics.
+    
+    Args:
+        dataloader (DataLoader): Dataloader for the test dataset.
+        output_dir (str): Directory to save the output depth images.
 
+    Returns:
+        dict: Aggregated evaluation metrics.
+    """
+    model.eval()
+    metrics = {
+        "metric_depth_error": 0,
+        "metric_depth_error_under3": 0,
+        "abs_rel": 0,
+        "sq_rel": 0,
+        "rmse": 0,
+        "rmse_log": 0,
+        "sigma_1_25": 0,
+        "sigma_1_25_2": 0,
+        "sigma_1_25_3": 0,
+        "sample_count": 0,
+        "total_inference_time": 0
+    }
+
+    with torch.no_grad():
         for idx, batch in enumerate(dataloader):
             start_time = time.time()
             recon = EXPERIMENT.post_forward(model(batch["Coded"].to(device)))
@@ -71,8 +101,11 @@ def evaluate(dataloader: DataLoader, output_dir):
             batch_inference_time = end_time - start_time
             metrics["total_inference_time"] += batch_inference_time
 
+            # Convert depth values to metric depth
             metric_gt = EXPERIMENT.depth.output_to_metric(batch["Depth"]).squeeze(1)
             metric_re = EXPERIMENT.depth.output_to_metric(recon).squeeze(1)
+
+            # Apply valid mask for depth values greater than 0
             valid_mask = metric_gt > 0
             gt = torch.clamp(metric_gt[valid_mask], 0, 6).to(device)
             pred = torch.clamp(metric_re[valid_mask], 0, 6)
@@ -80,6 +113,7 @@ def evaluate(dataloader: DataLoader, output_dir):
             log_diff = torch.log(pred) - torch.log(gt)
             metrics["rmse_log"] += torch.sqrt(torch.mean(log_diff ** 2))
 
+            # Calculate metrics only for valid depth predictions
             mask = gt < 3
             if torch.any(mask).item():
                 metrics["metric_depth_error_under3"] += L1(pred[mask], gt[mask]).item() * len(batch)
@@ -98,12 +132,14 @@ def evaluate(dataloader: DataLoader, output_dir):
             output_path_pred = os.path.join(output_dir, "pred_depth", f"{idx}.png")
             cv2.imwrite(output_path_pred, prediction)
 
+        # Compute average inference time per batch
         avg_inference_speed = metrics["total_inference_time"] / len(dataloader)
         avg_fps = 1 / avg_inference_speed
 
         print(f"Average Inference Speed: {avg_inference_speed:.4f} seconds per batch")
         print(f"Average FPS: {avg_fps:.2f} frames per second")
 
+        # Average the metrics
         avg_metrics = {k: v / metrics["sample_count"] for k, v in metrics.items() if k != "total_inference_time"}
 
     return avg_metrics
@@ -116,10 +152,10 @@ os.makedirs(os.path.join(output_dir, "pred_depth"), exist_ok=True)
 for name, dataloader in test_loaders.items():
     metrics = evaluate(dataloader, output_dir)
 
-    if name in EXPERIMENT.train:
-        print(f"[train] {name.name}")
+    if name in [item.name for item in EXPERIMENT.train]:
+        print(f"[train] {name}")
     else:
-        print(f"{name.name}")
+        print(f"{name}")
 
     print(f"| L1     : {metrics['metric_depth_error']:.3f}")
     print(f"| L1 <3m : {metrics['metric_depth_error_under3']:.3f}")
